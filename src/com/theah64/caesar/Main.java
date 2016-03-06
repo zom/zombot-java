@@ -9,6 +9,7 @@ import com.google.code.chatterbotapi.ChatterBotType;
  * Created by theapache64 on 6/3/16.
  */
 public class Main {
+
     public static void main(String[] args) throws Exception {
         ChatterBotFactory factory = new ChatterBotFactory();
 
