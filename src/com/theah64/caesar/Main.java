@@ -37,8 +37,7 @@ public class Main {
         final Console console = System.console();
         if (console == null) {
             System.out.println("Error: couldn't find console");
-            password = "PwD#5689847469";
-            //throw new IOException("Failed to get console");
+            throw new IOException("Failed to get console");
         } else {
             final char[] passArr = console.readPassword("Enter password: ");
             password = new String(passArr);
