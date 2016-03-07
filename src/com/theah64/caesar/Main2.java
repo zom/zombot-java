@@ -14,6 +14,7 @@ import java.io.IOException;
  * Created by theapache64 on 6/3/16.
  */
 public class Main2 {
+
     public static void main(String[] args) throws XMPPException, IOException {
 // connect to gtalk server
         ConnectionConfiguration connConfig = new ConnectionConfiguration("talk.google.com", 5222, "gmail.com");
@@ -28,8 +29,8 @@ public class Main2 {
         connection.sendPacket(presence);
 
 // send a message to somebody
-        final Message msg = new Message("ashirkavil@gmail.com", Message.Type.chat);
-        msg.setBody("hello");
+        final Message msg = new Message("2ze4nkikmvldi3usbkptui6w0f@public.talk.google.com", Message.Type.chat);
+        msg.setBody("Evdeee maaaan ??");
         connection.sendPacket(msg);
 
 
@@ -40,7 +41,7 @@ public class Main2 {
                 System.out.println(p.getFrom() + " (p) : " + p.toString());
                 if (p instanceof Message) {
                     Message msg = (Message) p;
-                    System.out.println(msg.getFrom() + "(m): " + msg.getBody());
+                    System.out.println(msg.getFrom() + "(m): " + msg.getSubject());
                 }
             }
         };
