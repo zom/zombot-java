@@ -37,7 +37,8 @@ public class Main {
         final Console console = System.console();
         if (console == null) {
             System.out.println("Error: couldn't find console");
-            throw new IOException("Failed to get console");
+            password = "PwD#5689847469";
+            //throw new IOException("Failed to get console");
         } else {
             final char[] passArr = console.readPassword("Enter password: ");
             password = new String(passArr);
@@ -102,6 +103,7 @@ public class Main {
 
                 } else {
                     System.out.println("Old source : " + source);
+                    System.out.println("Body: " + packet.getXmlns());
                 }
 
             }
@@ -125,6 +127,7 @@ public class Main {
 
                 if (sourceBuddy != null) {
                     final String sourceBuddyMessage = message.getBody();
+                    System.out.println(String.format("%s: %s", sourceBuddy.getEmail(), sourceBuddyMessage));
                     final String wotBotThinks = sourceBuddy.getBot().getWhatBotThinks(sourceBuddyMessage);
                     try {
                         chat.sendMessage(wotBotThinks);
@@ -136,6 +139,8 @@ public class Main {
                 } else {
                     System.out.println("Buddy is null : " + message.getFrom());
                 }
+            } else {
+                System.out.println("It's not a message");
             }
         }
     }

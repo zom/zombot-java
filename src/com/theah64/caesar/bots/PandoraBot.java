@@ -24,11 +24,27 @@ public class PandoraBot extends BasicBot {
 
     @Override
     public String getWhatBotThinks(String sourceBuddyMessage) {
+
+        final String caesarSays = Caeser.think(sourceBuddyMessage);
+        if (caesarSays != null) {
+            return caesarSays;
+        }
+
         try {
-            return pandoraBotSession.think(sourceBuddyMessage);
+            final String whatBotThinks = pandoraBotSession.think(sourceBuddyMessage);
+            return getWhatYouThink(whatBotThinks);
         } catch (Exception e) {
             e.printStackTrace();
             return SORRY;
         }
+    }
+
+
+    @Override
+    public String getWhatYouThink(String whatBotThinks) {
+        if (whatBotThinks.toLowerCase().contains("pandorabots")) {
+            return "I'm created by theapache64";
+        }
+        return whatBotThinks;
     }
 }

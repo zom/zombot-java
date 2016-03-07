@@ -18,4 +18,8 @@ public class Buddy {
     public BasicBot getBot() {
         return bot;
     }
+
+    public String getEmail() {
+        return email;
+    }
 }

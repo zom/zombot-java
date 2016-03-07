@@ -23,11 +23,25 @@ public class CleverBot extends BasicBot {
 
     @Override
     public String getWhatBotThinks(String sourceBuddyMessage) {
+
+        final String caesarSays = Caeser.think(sourceBuddyMessage);
+        if (caesarSays != null) {
+            return caesarSays;
+        }
+
         try {
-            return cleverBotSession.think(sourceBuddyMessage);
+            final String wotBotThinks = cleverBotSession.think(sourceBuddyMessage);
+            return getWhatYouThink(wotBotThinks);
         } catch (Exception e) {
             e.printStackTrace();
             return SORRY;
         }
     }
+
+    @Override
+    public String getWhatYouThink(String whatBotThinks) {
+        return whatBotThinks;
+    }
+
+
 }

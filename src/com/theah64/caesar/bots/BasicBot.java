@@ -12,6 +12,8 @@ public abstract class BasicBot {
 
     public abstract String getWhatBotThinks(String sourceBuddyMessage);
 
+    public abstract String getWhatYouThink(String whatBotThinks);
+
     protected static ChatterBotFactory getChatFactory() {
         return chatFactory;
     }
