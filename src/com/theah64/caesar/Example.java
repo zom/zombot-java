@@ -105,7 +105,6 @@ public class Example {
                 }
 
                 System.out.println("Creating chat ....");
-                chatmanager.getChatListeners();
                 chatmanager.createChat(p.getFrom(), new MessageParrot());
 
                 /*try {

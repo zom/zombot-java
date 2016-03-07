@@ -13,7 +13,7 @@ import java.io.IOException;
 /**
  * Created by theapache64 on 6/3/16.
  */
-public class Main2 {
+public class GoogleTalkTest {
 
     public static void main(String[] args) throws XMPPException, IOException {
 // connect to gtalk server

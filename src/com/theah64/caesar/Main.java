@@ -1,34 +1,40 @@
 package com.theah64.caesar;
 
-import com.google.code.chatterbotapi.ChatterBot;
-import com.google.code.chatterbotapi.ChatterBotFactory;
-import com.google.code.chatterbotapi.ChatterBotSession;
-import com.google.code.chatterbotapi.ChatterBotType;
+import com.theah64.caesar.utils.CommonUtils;
+
+import java.io.Console;
+import java.util.Scanner;
 
 /**
- * Created by theapache64 on 6/3/16.
+ * Created by shifar on 7/3/16.
  */
 public class Main {
 
-    public static void main(String[] args) throws Exception {
-        ChatterBotFactory factory = new ChatterBotFactory();
+    private static final Scanner scanner = new Scanner(System.in);
 
-        ChatterBot bot1 = factory.create(ChatterBotType.CLEVERBOT);
-        ChatterBotSession bot1session = bot1.createSession();
+    public static void main(String[] args) {
 
-        ChatterBot bot2 = factory.create(ChatterBotType.PANDORABOTS, "b0dafd24ee35a477");
-        ChatterBotSession bot2session = bot2.createSession();
+        //Asking password
 
-        String s = "Hi";
+        //Asking email
+        String email;
+        do {
+            System.out.print("Enter your google email: ");
+            email = scanner.nextLine();
+        } while (!CommonUtils.isValidEmail(email));
 
-        while (true) {
 
-            System.out.println("bot1> " + s);
-
-            s = bot2session.think(s);
-            System.out.println("bot2> " + s);
-
-            s = bot1session.think(s);
+        String password;
+        final Console console = System.console();
+        if (console == null) {
+            System.out.println("Error: couldn't find console. Using demo password.");
+            
+        } else {
+            final char[] passArr = console.readPassword("Enter password: ");
+            password = new String(passArr);
         }
+
+
     }
+
 }
