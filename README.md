@@ -1,2 +1,4 @@
 # Caesar
-A Java made auto-reply bot for google's talk/hangout. 
+
+Caesar is a  java made chatbot that uses Smack library for the XMPP communication and ChatterBot for the AI Conversation.
+
