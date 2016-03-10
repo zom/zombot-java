@@ -1,6 +1,7 @@
 package com.theah64.caesar;
 
 import com.theah64.caesar.bots.BasicBot;
+import com.theah64.caesar.bots.CleverBot;
 import com.theah64.caesar.bots.PandoraBot;
 import com.theah64.caesar.models.Buddy;
 import com.theah64.caesar.utils.CommonUtils;
@@ -21,6 +22,8 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
     private static Map<String, Buddy> buddyList;
+
+    private static final Random random = new Random();
 
     public static void main(String[] args) throws IOException {
 
@@ -81,28 +84,26 @@ public class Main {
             public void processPacket(Packet packet) {
 
                 System.out.println("------------------------------");
-                System.out.println("Packet received");
-
                 final String source = packet.getFrom();
                 if (!buddyList.containsKey(source)) {
 
-                    //Building new buddy details
-                    final BasicBot buddyBot = new PandoraBot();
+                    //Building a bot randomly
+                    final BasicBot buddyBot = random.nextInt(10) % 2 == 0 ? new PandoraBot() : new CleverBot();
                     final Buddy newBuddy = new Buddy(source, buddyBot);
+
+                    if (buddyBot instanceof PandoraBot) {
+                        System.out.println("BotP assigned for " + packet.getFrom());
+                    } else {
+                        System.out.println("BotC assigned for " + packet.getFrom());
+                    }
 
                     //Adding new buddy to the list
                     buddyList.put(source, newBuddy);
 
-                    System.out.println("New source: " + source);
-
-                    System.out.println("Building chat listener for " + source);
+                    System.out.println("Listening to " + packet.getFrom());
 
                     //Setting listeners to the source
                     chatManager.createChat(packet.getFrom(), new MessageWatcher());
-
-                } else {
-                    System.out.println("Old source : " + source);
-                    System.out.println("Body: " + packet.getXmlns());
                 }
 
             }
@@ -125,12 +126,13 @@ public class Main {
                 final Buddy sourceBuddy = buddyList.get(message.getFrom());
 
                 if (sourceBuddy != null) {
+                    System.out.println("--------------------------");
                     final String sourceBuddyMessage = message.getBody();
                     System.out.println(String.format("%s: %s", sourceBuddy.getEmail(), sourceBuddyMessage));
                     final String wotBotThinks = sourceBuddy.getBot().getWhatBotThinks(sourceBuddyMessage);
                     try {
                         chat.sendMessage(wotBotThinks);
-                        System.out.println("Message sent: " + wotBotThinks);
+                        System.out.println("You: " + wotBotThinks);
                     } catch (XMPPException e) {
                         e.printStackTrace();
                         System.out.println("Failed to send reply");
@@ -139,7 +141,7 @@ public class Main {
                     System.out.println("Buddy is null : " + message.getFrom());
                 }
             } else {
-                System.out.println("It's not a message");
+                System.out.println(String.format("%s is typing...", message.getFrom()));
             }
         }
     }

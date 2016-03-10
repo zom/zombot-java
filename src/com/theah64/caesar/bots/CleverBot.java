@@ -11,13 +11,15 @@ public class CleverBot extends BasicBot {
     private ChatterBotSession cleverBotSession;
 
     public CleverBot() {
+
+
         try {
             cleverBotSession = getChatFactory()
                     .create(ChatterBotType.CLEVERBOT)
                     .createSession();
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Failed to build celever bot");
+            System.out.println("Failed to build clever bot");
         }
     }
 
