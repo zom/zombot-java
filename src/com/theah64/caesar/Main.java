@@ -88,7 +88,7 @@ public class Main {
                 if (!buddyList.containsKey(source)) {
 
                     //Building a bot randomly
-                    final BasicBot buddyBot = random.nextInt(10) % 2 == 0 ? new PandoraBot() : new CleverBot();
+                    final BasicBot buddyBot = random.nextInt(2) == 0 ? new PandoraBot() : new CleverBot();
                     final Buddy newBuddy = new Buddy(source, buddyBot);
 
                     if (buddyBot instanceof PandoraBot) {
