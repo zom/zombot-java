@@ -42,8 +42,13 @@ public class PandoraBot extends BasicBot {
 
     @Override
     public String getWhatYouThink(String whatBotThinks) {
-        if (whatBotThinks.toLowerCase().contains("pandorabots")) {
-            return "I'm created by theapache64";
+
+        whatBotThinks = whatBotThinks.toLowerCase();
+
+        if (whatBotThinks.contains("peter")) {
+            return Caeser.I_GOT_DEVELOPED;
+        } else if (whatBotThinks.contains("pandorabots")) {
+            return Caeser.I_
         }
         return whatBotThinks;
     }
