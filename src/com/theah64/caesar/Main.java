@@ -88,14 +88,7 @@ public class Main {
                 if (!buddyList.containsKey(source)) {
 
                     //Building a bot randomly
-                    final BasicBot buddyBot = random.nextInt(2) == 0 ? new PandoraBot() : new CleverBot();
-                    final Buddy newBuddy = new Buddy(source, buddyBot);
-
-                    if (buddyBot instanceof PandoraBot) {
-                        System.out.println("BotP assigned for " + packet.getFrom());
-                    } else {
-                        System.out.println("BotC assigned for " + packet.getFrom());
-                    }
+                    final Buddy newBuddy = new Buddy(source, new PandoraBot());
 
                     //Adding new buddy to the list
                     buddyList.put(source, newBuddy);
