@@ -8,7 +8,6 @@ import com.google.code.chatterbotapi.ChatterBotType;
  */
 public class PandoraBot extends BasicBot {
 
-
     private ChatterBotSession pandoraBotSession;
 
     public PandoraBot() {
@@ -45,11 +44,10 @@ public class PandoraBot extends BasicBot {
 
         whatBotThinks = whatBotThinks.toLowerCase();
 
-        if (whatBotThinks.contains("peter")) {
-            return Caeser.I_GOT_DEVELOPED;
-        } else if (whatBotThinks.contains("pandorabots")) {
-            return Caeser.I_
+        if (whatBotThinks.contains("peter") || whatBotThinks.contains("pandorabots")) {
+            return Caeser.MESSAGE_I_GOT_DEVELOPED_BY_THEAPACHE64;
         }
+
         return whatBotThinks;
     }
 }
