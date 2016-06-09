@@ -23,8 +23,6 @@ public class Main {
 
     private static Map<String, Buddy> buddyList;
 
-    private static final Random random = new Random();
-
     public static void main(String[] args) throws IOException {
 
         //Asking email
