@@ -30,11 +30,12 @@ public class CleverBot extends BasicBot {
 
         ArrayList<String> response = new ArrayList<String>();
 
+        /**
         final String caesarSays = Caeser.think(sourceBuddyMessage);
         if (caesarSays != null) {
             response.add(caesarSays);
             return response;
-        }
+        }**/
 
         try {
             final String wotBotThinks = cleverBotSession.think(sourceBuddyMessage);

@@ -62,7 +62,7 @@ public class Main implements Runnable {
      public Main (String host, String user, String password) throws IOException
 	{
 
-        KalaBot.init();
+      //  KalaBot.init();
 
         //Building XMPP Connection
         final ConnectionConfiguration config = new ConnectionConfiguration(host, 5222);
@@ -96,7 +96,7 @@ public class Main implements Runnable {
 			//	System.out.println(session + ": verification status=" + otrKeyManager.isVerified(session));
 			}
 		});
-
+		
 		otrEngine = new OtrEngineHostImpl(this);
 
         //list to store listening contacts
