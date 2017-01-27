@@ -3,6 +3,8 @@ package com.theah64.caesar.bots;
 import com.google.code.chatterbotapi.ChatterBotSession;
 import com.google.code.chatterbotapi.ChatterBotType;
 
+import java.util.ArrayList;
+
 /**
  * Created by shifar on 7/3/16.
  */
@@ -24,19 +26,24 @@ public class CleverBot extends BasicBot {
     }
 
     @Override
-    public String getWhatBotThinks(String sourceBuddyMessage) {
+    public ArrayList<String> getWhatBotThinks(String sourceBuddyMessage) {
+
+        ArrayList<String> response = new ArrayList<String>();
 
         final String caesarSays = Caeser.think(sourceBuddyMessage);
         if (caesarSays != null) {
-            return caesarSays;
+            response.add(caesarSays);
+            return response;
         }
 
         try {
             final String wotBotThinks = cleverBotSession.think(sourceBuddyMessage);
-            return getWhatYouThink(wotBotThinks);
+            response.add(getWhatYouThink(wotBotThinks));
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
-            return SORRY;
+            response.add(SORRY);
+            return response;
         }
     }
 
