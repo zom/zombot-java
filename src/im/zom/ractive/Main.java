@@ -1,38 +1,21 @@
-package com.theah64.caesar;
+package im.zom.ractive;
 
-import com.theah64.caesar.bots.BasicBot;
-import com.theah64.caesar.bots.CleverBot;
-import com.theah64.caesar.bots.KalaBot;
-import com.theah64.caesar.bots.PandoraBot;
-import com.theah64.caesar.models.Buddy;
-import com.theah64.caesar.utils.CommonUtils;
+import im.zom.ractive.bots.PandoraBot;
+import im.zom.ractive.models.Buddy;
 import net.java.otr4j.session.Session;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 
-import java.io.Console;
 import java.io.IOException;
 import java.util.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.security.KeyPair;
-import java.security.PublicKey;
-import java.util.List;
 
-
-
-import net.java.otr4j.OtrEngineListener;
 import net.java.otr4j.OtrException;
 import net.java.otr4j.OtrKeyManagerImpl;
 import net.java.otr4j.OtrKeyManagerListener;
-import net.java.otr4j.OtrPolicy;
 import net.java.otr4j.session.SessionID;
-import net.java.otr4j.session.SessionStatus;
-import net.java.otr4j.session.TLV;
 
 /**
  * Created by shifar on 7/3/16.

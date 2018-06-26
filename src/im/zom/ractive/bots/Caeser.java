@@ -1,4 +1,4 @@
-package com.theah64.caesar.bots;
+package im.zom.ractive.bots;
 
 /**
  * Created by shifar on 7/3/16.

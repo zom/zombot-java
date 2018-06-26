@@ -1,4 +1,4 @@
-package com.theah64.caesar.bots;
+package im.zom.ractive.bots;
 
 import com.google.code.chatterbotapi.ChatterBotSession;
 import com.google.code.chatterbotapi.ChatterBotType;

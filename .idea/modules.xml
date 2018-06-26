@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Caesar.iml" filepath="$PROJECT_DIR$/Caesar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/zombot-java.iml" filepath="$PROJECT_DIR$/zombot-java.iml" />
     </modules>
   </component>
 </project>

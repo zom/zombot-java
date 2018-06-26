@@ -1,6 +1,6 @@
-package com.theah64.caesar.models;
+package im.zom.ractive.models;
 
-import com.theah64.caesar.bots.BasicBot;
+import im.zom.ractive.bots.BasicBot;
 
 /**
  * Created by shifar on 7/3/16.
