@@ -2,7 +2,6 @@ package im.zom.ractive.models;
 
 import im.zom.ractive.bots.BasicBot;
 import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.Jid;
 
 /**
  * Created by shifar on 7/3/16.

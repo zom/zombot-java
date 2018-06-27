@@ -1,6 +1,8 @@
 package im.zom.ractive;
 
-import im.zom.ractive.bots.PandoraBot;
+import im.zom.ractive.bots.BasicBot;
+import im.zom.ractive.bots.RiveBot;
+import im.zom.ractive.bots.SearchBot;
 import im.zom.ractive.models.Buddy;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.chat2.Chat;
@@ -8,7 +10,8 @@ import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.omemo.OmemoConfiguration;
@@ -24,6 +27,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoService;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
@@ -49,11 +53,18 @@ import java.util.Map;
  */
 public class Main implements Runnable, IncomingChatMessageListener {
 
-    private static Map<Jid, Buddy> buddyList;
+    private static Map<BareJid, Buddy> buddyList;
 
     private XMPPTCPConnection mConnection;
+    private Roster mRoster;
+
     private ChatManager mChatManager;
     private OmemoManager mOmemoManager;
+
+    private boolean mFirstTime = false;
+
+    private String mBotType = null;
+    private String mBotParam = null;
 
     private Map<EntityBareJid, Chat> chatList = new HashMap<>();
 
@@ -65,13 +76,17 @@ public class Main implements Runnable, IncomingChatMessageListener {
         String user = args[0];
         String host = args[1];
         String password = args[2];
+        String botType = args[3];
+        String botParam = args[4];
 
-		new Main(host,user,password);
+		new Main(host,user,password,botType, botParam);
 	}
  
-     public Main (String host, String user, String password) throws IOException, InterruptedException, XMPPException, SmackException, NoSuchPaddingException, CorruptedOmemoKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, InvalidKeyException {
+     public Main (String host, String user, String password, String botType, String botParam) throws IOException, InterruptedException, XMPPException, SmackException, NoSuchPaddingException, CorruptedOmemoKeyException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, InvalidKeyException {
 
 	    String resource = "bot";
+	    mBotType = botType;
+	    mBotParam = botParam;
 
         //Building XMPP Connection
 
@@ -102,6 +117,10 @@ public class Main implements Runnable, IncomingChatMessageListener {
         try {
             mConnection.login(user, password, Resourcepart.from(resource));
 
+            Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.accept_all);
+            mRoster = Roster.getInstanceFor(mConnection);
+            mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
+
             System.out.println("Logged in as " + user);
 
             mChatManager = ChatManager.getInstanceFor(mConnection);
@@ -116,7 +135,10 @@ public class Main implements Runnable, IncomingChatMessageListener {
             SignalOmemoService.acknowledgeLicense();
             SignalOmemoService.setup();
             //path where keys get stored
-            OmemoConfiguration.setFileBasedOmemoStoreDefaultPath(new File("/tmp/omemo"));
+            File fileOmemo = new File("omemo");
+
+            mFirstTime = !fileOmemo.exists();
+            OmemoConfiguration.setFileBasedOmemoStoreDefaultPath(fileOmemo);
                 mOmemoManager = OmemoManager.getInstanceFor(mConnection);
 
             //Listener for incoming OMEMO messages
@@ -176,59 +198,82 @@ public class Main implements Runnable, IncomingChatMessageListener {
             try { Thread.sleep(3000);
 
                 mOmemoManager.initialize();
-          //      mOmemoManager.regenerate();
-          //      mOmemoManager.regenerate();
 
-            } catch (Exception e){}
+                if (mFirstTime) {
+                    mOmemoManager.regenerate();
+                    mOmemoManager.purgeDevices();
+                }
+
+                for (RosterEntry entry : mRoster.getEntries())
+                {
+                    buildSession(entry.getJid().asEntityBareJidIfPossible());
+                }
+
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
-    public void buildSession (Message message)
+    public void buildSession (EntityBareJid source)
     {
-        final Jid source = message.getFrom();
-
         if (!buddyList.containsKey(source)) {
 
-            if (message.getFrom() != null) {
                 //Building a bot randomly
-                final Buddy newBuddy = new Buddy(source.asBareJid(), new PandoraBot());
+                BasicBot bot = null;
+                if (mBotType.equalsIgnoreCase("rive"))
+                {
+                    bot = new RiveBot(source.asBareJid().getLocalpartOrNull().toString(),mBotParam);
+                }
+                else if (mBotType.equalsIgnoreCase("search"))
+                {
+                    String lang = "en";
+                    String[] loginParts = mBotParam.split(":");
+                    bot = new SearchBot(loginParts[0],loginParts[1],lang);
+                }
 
+                final Buddy newBuddy = new Buddy(source.asBareJid(), bot);
                 //Adding new buddy to the list
                 buddyList.put(source, newBuddy);
 
-                System.out.println("Listening to " + message.getFrom());
+                System.out.println("Listening to " + source);
                 System.out.println("Buddylist size: " + buddyList.size());
 
                 //Setting listeners to the source
-                Chat chat = mChatManager.chatWith(message.getFrom().asEntityBareJidIfPossible());
-                chatList.put(message.getFrom().asEntityBareJidIfPossible(), chat);
+                Chat chat = mChatManager.chatWith(source);
+                chatList.put(source, chat);
 
                 mChatManager.addIncomingListener(Main.this);
 
-                HashMap<OmemoDevice, OmemoFingerprint> fingerprints =
-                        mOmemoManager.getActiveFingerprints(source.asBareJid());
-
-                if (fingerprints.size() == 0)
-                {
-                    try {
-                        mOmemoManager.buildSessionsWith(source.asBareJid());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (CannotEstablishOmemoSessionException e) {
-                        e.printStackTrace();
-                    } catch (SmackException.NotConnectedException e) {
-                        e.printStackTrace();
-                    } catch (SmackException.NoResponseException e) {
-                        e.printStackTrace();
-                    }
-                }
-                //Let user decide
-                for (OmemoDevice d : fingerprints.keySet()) {
-                    mOmemoManager.trustOmemoIdentity(d, fingerprints.get(d));
-                }
+                trustAllIdentities(source.asBareJid());
 
 
             }
+
+    }
+
+    private void trustAllIdentities (BareJid jid)
+    {
+        HashMap<OmemoDevice, OmemoFingerprint> fingerprints =
+                mOmemoManager.getActiveFingerprints(jid);
+
+        if (fingerprints.size() == 0)
+        {
+            try {
+                mOmemoManager.buildSessionsWith(jid);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (CannotEstablishOmemoSessionException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            }
+        }
+        //Let user decide
+        for (OmemoDevice d : fingerprints.keySet()) {
+            mOmemoManager.trustOmemoIdentity(d, fingerprints.get(d));
         }
     }
 
@@ -245,6 +290,17 @@ public class Main implements Runnable, IncomingChatMessageListener {
             for (OmemoDevice device : e.getUntrustedDevices()) {
                 System.out.println(device);
             }
+
+            trustAllIdentities(jid.asBareJid());
+            try {
+                encrypted = OmemoManager.getInstanceFor(mConnection).encrypt(jid.asEntityBareJidIfPossible(), message.toString());
+            } catch (CannotEstablishOmemoSessionException e1) {
+                System.out.println("STILL Undecided Identities: ");
+                for (OmemoDevice device : e.getUntrustedDevices()) {
+                    System.out.println(device);
+                }
+            }
+
         }
         //In case we cannot establish session with some devices
         catch (CannotEstablishOmemoSessionException e) {
@@ -261,11 +317,11 @@ public class Main implements Runnable, IncomingChatMessageListener {
     @Override
     public void newIncomingMessage(EntityBareJid entityBareJid, Message message, Chat chat) {
 
-        buildSession(message);
+        buildSession(message.getFrom().asEntityBareJidIfPossible());
 
         if (message.getBody() != null) {
 
-            final Buddy sourceBuddy = buddyList.get(message.getFrom());
+            final Buddy sourceBuddy = buddyList.get(message.getFrom().asEntityBareJidIfPossible());
 
             if (sourceBuddy != null) {
                 try {
