@@ -1,17 +1,19 @@
 package im.zom.ractive.models;
 
 import im.zom.ractive.bots.BasicBot;
+import org.jxmpp.jid.BareJid;
+import org.jxmpp.jid.Jid;
 
 /**
  * Created by shifar on 7/3/16.
  */
 public class Buddy {
 
-    private final String email;
+    private final BareJid jid;
     private final BasicBot bot;
 
-    public Buddy(String email, BasicBot bot) {
-        this.email = email;
+    public Buddy(BareJid jid, BasicBot bot) {
+        this.jid = jid;
         this.bot = bot;
     }
 
@@ -19,7 +21,7 @@ public class Buddy {
         return bot;
     }
 
-    public String getEmail() {
-        return email;
+    public BareJid getJID() {
+        return jid;
     }
 }
