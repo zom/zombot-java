@@ -27,6 +27,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoDevice;
 import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoService;
+import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.DomainBareJid;
 import org.jxmpp.jid.EntityBareJid;
@@ -193,23 +194,28 @@ public class Main implements Runnable, IncomingChatMessageListener {
 
     public void run ()
     {
-        while (true)
-        {
-            try { Thread.sleep(3000);
+        try {
+            mOmemoManager.initialize();
+            if (mFirstTime) {
+                mOmemoManager.regenerate();
+                mOmemoManager.purgeDevices();
+            }
 
-                mOmemoManager.initialize();
+            for (RosterEntry entry : mRoster.getEntries()) {
+                buildSession(entry.getJid().asEntityBareJidIfPossible());
+            }
 
-                if (mFirstTime) {
-                    mOmemoManager.regenerate();
-                    mOmemoManager.purgeDevices();
-                }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-                for (RosterEntry entry : mRoster.getEntries())
-                {
-                    buildSession(entry.getJid().asEntityBareJidIfPossible());
-                }
 
-            } catch (Exception e){
+        while (true) {
+            try {
+                Thread.sleep(3000);
+
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -243,7 +249,24 @@ public class Main implements Runnable, IncomingChatMessageListener {
                 Chat chat = mChatManager.chatWith(source);
                 chatList.put(source, chat);
 
-                mChatManager.addIncomingListener(Main.this);
+            try {
+                Presence presenced = new Presence(Presence.Type.subscribed);
+                presenced.setTo(source);
+                mConnection.sendStanza(presenced);
+
+                Presence presence = new Presence(Presence.Type.subscribe);
+                presence.setTo(source);
+                mConnection.sendStanza(presence);
+
+
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+            mChatManager.addIncomingListener(Main.this);
 
                 trustAllIdentities(source.asBareJid());
 
@@ -257,20 +280,6 @@ public class Main implements Runnable, IncomingChatMessageListener {
         HashMap<OmemoDevice, OmemoFingerprint> fingerprints =
                 mOmemoManager.getActiveFingerprints(jid);
 
-        if (fingerprints.size() == 0)
-        {
-            try {
-                mOmemoManager.buildSessionsWith(jid);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (CannotEstablishOmemoSessionException e) {
-                e.printStackTrace();
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-            } catch (SmackException.NoResponseException e) {
-                e.printStackTrace();
-            }
-        }
         //Let user decide
         for (OmemoDevice d : fingerprints.keySet()) {
             mOmemoManager.trustOmemoIdentity(d, fingerprints.get(d));

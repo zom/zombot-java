@@ -18,7 +18,7 @@ public class SearchBot extends BasicBot {
     MediaWikiBot wikiBot;
     WikiModel wikiModel = new WikiModel("https://www.mywiki.com/wiki/${image}", "https://www.mywiki.com/wiki/${title}");
 
-    private final static int MAX_LENGTH = 500;
+    private final static int MAX_LENGTH = 1000;
 
     public SearchBot (String login, String pass, String lang)
     {
@@ -44,6 +44,8 @@ public class SearchBot extends BasicBot {
 
             if (plainStr.length() > MAX_LENGTH)
                 plainStr = plainStr.substring(0,MAX_LENGTH) + "...";
+
+            plainStr = plainStr.replaceAll("(\\w+):([^\\n]+)","").replace("\n","");
 
             resp.add(plainStr);
 
