@@ -10,8 +10,10 @@ import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.PresenceEventListener;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.omemo.OmemoConfiguration;
@@ -28,10 +30,7 @@ import org.jivesoftware.smackx.omemo.internal.OmemoMessageInformation;
 import org.jivesoftware.smackx.omemo.listener.OmemoMessageListener;
 import org.jivesoftware.smackx.omemo.signal.SignalOmemoService;
 import org.jivesoftware.smackx.pubsub.PubSubException;
-import org.jxmpp.jid.BareJid;
-import org.jxmpp.jid.DomainBareJid;
-import org.jxmpp.jid.EntityBareJid;
-import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.*;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.jid.parts.Resourcepart;
 import org.whispersystems.libsignal.IdentityKey;
@@ -46,6 +45,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -111,6 +111,7 @@ public class Main implements Runnable, IncomingChatMessageListener {
 
         builder.setServiceName((DomainBareJid) jid);
 
+
         mConnection = new XMPPTCPConnection( builder.build());
         mConnection.connect();
 
@@ -122,10 +123,61 @@ public class Main implements Runnable, IncomingChatMessageListener {
             mRoster = Roster.getInstanceFor(mConnection);
             mRoster.setSubscriptionMode(Roster.SubscriptionMode.accept_all);
 
+            mRoster.addRosterListener(new RosterListener() {
+                @Override
+                public void entriesAdded(Collection<Jid> collection) {
+
+                }
+
+                @Override
+                public void entriesUpdated(Collection<Jid> collection) {
+
+                }
+
+                @Override
+                public void entriesDeleted(Collection<Jid> collection) {
+
+                }
+
+                @Override
+                public void presenceChanged(Presence presence) {
+
+                }
+            });
+
+            mRoster.addPresenceEventListener(new PresenceEventListener() {
+                @Override
+                public void presenceAvailable(FullJid fullJid, Presence presence) {
+                    buildSession(fullJid.asEntityBareJidIfPossible());
+                }
+
+                @Override
+                public void presenceUnavailable(FullJid fullJid, Presence presence) {
+
+                }
+
+                @Override
+                public void presenceError(Jid jid, Presence presence) {
+
+                }
+
+                @Override
+                public void presenceSubscribed(BareJid bareJid, Presence presence) {
+                    buildSession(bareJid.asEntityBareJidIfPossible());
+                }
+
+                @Override
+                public void presenceUnsubscribed(BareJid bareJid, Presence presence) {
+
+                }
+            });
+
+            ReconnectionManager rMan = ReconnectionManager.getInstanceFor(mConnection);
+            rMan.enableAutomaticReconnection();
+
             System.out.println("Logged in as " + user);
 
             mChatManager = ChatManager.getInstanceFor(mConnection);
-
             mChatManager.addIncomingListener(this);
 
             //Setting presence
@@ -339,16 +391,7 @@ public class Main implements Runnable, IncomingChatMessageListener {
 
                     if (sourceBuddyMessage != null && sourceBuddyMessage.length() > 0) {
 
-
-
-                        System.out.println(String.format("ZomUser: %s", sourceBuddyMessage));
-                        final ArrayList<String> wotBotThinks = sourceBuddy.getBot().getWhatBotThinks(sourceBuddyMessage);
-
-                        for (String response : wotBotThinks) {
-
-                            sendMessage(message.getFrom(),response);
-                            System.out.println("ZomBot: " + response);
-                        }
+                        handleBot (message.getFrom(), sourceBuddy.getBot(),sourceBuddyMessage);
 
                     }
                 } catch (Exception e) {
@@ -359,4 +402,18 @@ public class Main implements Runnable, IncomingChatMessageListener {
         }
     }
 
+    private void handleBot (Jid jid, BasicBot bot, String request)
+    {
+        final ArrayList<String> wotBotThinks = bot.getWhatBotThinks(request);
+
+        for (String response : wotBotThinks) {
+
+            try {
+                sendMessage(jid,response);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
 }
