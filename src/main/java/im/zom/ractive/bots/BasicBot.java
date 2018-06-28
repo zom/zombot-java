@@ -13,4 +13,6 @@ public abstract class BasicBot {
 
     public abstract String getWhatYouThink(String whatBotThinks);
 
+    public abstract String getWelcomeMessage ();
+
 }

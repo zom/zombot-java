@@ -50,4 +50,9 @@ public class RiveBot extends BasicBot {
     public String getWhatYouThink(String whatBotThinks) {
         return null;
     }
+
+    @Override
+    public String getWelcomeMessage() {
+        return null;
+    }
 }

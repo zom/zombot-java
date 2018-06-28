@@ -5,9 +5,9 @@ import im.zom.ractive.bots.RiveBot;
 import im.zom.ractive.bots.SearchBot;
 import im.zom.ractive.models.Buddy;
 import org.jivesoftware.smack.*;
-import org.jivesoftware.smack.chat2.Chat;
-import org.jivesoftware.smack.chat2.ChatManager;
-import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
+import org.jivesoftware.smack.chat.Chat;
+import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.PresenceEventListener;
@@ -16,6 +16,8 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smack.roster.RosterListener;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.chatstates.ChatState;
+import org.jivesoftware.smackx.chatstates.ChatStateManager;
 import org.jivesoftware.smackx.omemo.OmemoConfiguration;
 import org.jivesoftware.smackx.omemo.OmemoFingerprint;
 import org.jivesoftware.smackx.omemo.OmemoManager;
@@ -52,7 +54,7 @@ import java.util.Map;
 /**
  * Created by shifar on 7/3/16.
  */
-public class Main implements Runnable, IncomingChatMessageListener {
+public class Main implements Runnable {
 
     private static Map<BareJid, Buddy> buddyList;
 
@@ -178,7 +180,6 @@ public class Main implements Runnable, IncomingChatMessageListener {
             System.out.println("Logged in as " + user);
 
             mChatManager = ChatManager.getInstanceFor(mConnection);
-            mChatManager.addIncomingListener(this);
 
             //Setting presence
             final Presence presence = new Presence(Presence.Type.available);
@@ -216,7 +217,7 @@ public class Main implements Runnable, IncomingChatMessageListener {
                     Chat chat = chatList.get(from.asEntityBareJidIfPossible());
                     Message newMessage = encryptedMessage.clone();
                     newMessage.setBody(decryptedBody);
-                    newIncomingMessage(from.asEntityBareJidIfPossible(),newMessage,chat);
+                    handleMessage(from.asEntityBareJidIfPossible(),newMessage,chat);
 
                 }
 
@@ -277,29 +278,29 @@ public class Main implements Runnable, IncomingChatMessageListener {
     {
         if (!buddyList.containsKey(source)) {
 
-                //Building a bot randomly
-                BasicBot bot = null;
-                if (mBotType.equalsIgnoreCase("rive"))
-                {
-                    bot = new RiveBot(source.asBareJid().getLocalpartOrNull().toString(),mBotParam);
+            //Building a bot randomly
+            BasicBot bot = null;
+            if (mBotType.equalsIgnoreCase("rive")) {
+                bot = new RiveBot(source.asBareJid().getLocalpartOrNull().toString(), mBotParam);
+            } else if (mBotType.equalsIgnoreCase("search")) {
+                String lang = "en";
+                String[] loginParts = mBotParam.split(":");
+                bot = new SearchBot(loginParts[0], loginParts[1], lang);
+            }
+
+            final Buddy newBuddy = new Buddy(source.asBareJid(), bot);
+            //Adding new buddy to the list
+            buddyList.put(source, newBuddy);
+
+            //Setting listeners to the source
+            Chat chat = mChatManager.createChat(source);
+            chat.addMessageListener(new ChatMessageListener() {
+                @Override
+                public void processMessage(Chat chat, Message message) {
+                    trustAllIdentities(message.getFrom().asBareJid());
                 }
-                else if (mBotType.equalsIgnoreCase("search"))
-                {
-                    String lang = "en";
-                    String[] loginParts = mBotParam.split(":");
-                    bot = new SearchBot(loginParts[0],loginParts[1],lang);
-                }
-
-                final Buddy newBuddy = new Buddy(source.asBareJid(), bot);
-                //Adding new buddy to the list
-                buddyList.put(source, newBuddy);
-
-                System.out.println("Listening to " + source);
-                System.out.println("Buddylist size: " + buddyList.size());
-
-                //Setting listeners to the source
-                Chat chat = mChatManager.chatWith(source);
-                chatList.put(source, chat);
+            });
+            chatList.put(source, chat);
 
             try {
                 Presence presenced = new Presence(Presence.Type.subscribed);
@@ -310,20 +311,14 @@ public class Main implements Runnable, IncomingChatMessageListener {
                 presence.setTo(source);
                 mConnection.sendStanza(presence);
 
+                String welcome = bot.getWelcomeMessage();
+                if (welcome != null)
+                    sendMessage(source.asBareJid(),welcome);
 
-            } catch (SmackException.NotConnectedException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-
-
-            mChatManager.addIncomingListener(Main.this);
-
-                trustAllIdentities(source.asBareJid());
-
-
-            }
+        }
 
     }
 
@@ -370,13 +365,13 @@ public class Main implements Runnable, IncomingChatMessageListener {
 
         //send
         if (encrypted != null) {
-            ChatManager.getInstanceFor(mConnection).chatWith(jid.asEntityBareJidIfPossible()).send(encrypted);
+            //ChatManager.getInstanceFor(mConnection).chatWith(jid.asEntityBareJidIfPossible()).send(encrypted);
+            chatList.get(jid.asEntityBareJidIfPossible()).sendMessage(encrypted);
         }
 
     }
 
-    @Override
-    public void newIncomingMessage(EntityBareJid entityBareJid, Message message, Chat chat) {
+    public void handleMessage(EntityBareJid entityBareJid, Message message, Chat chat) {
 
         buildSession(message.getFrom().asEntityBareJidIfPossible());
 
@@ -391,6 +386,7 @@ public class Main implements Runnable, IncomingChatMessageListener {
 
                     if (sourceBuddyMessage != null && sourceBuddyMessage.length() > 0) {
 
+                        ChatStateManager.getInstance(mConnection).setCurrentState(ChatState.composing,chatList.get(entityBareJid));
                         handleBot (message.getFrom(), sourceBuddy.getBot(),sourceBuddyMessage);
 
                     }
