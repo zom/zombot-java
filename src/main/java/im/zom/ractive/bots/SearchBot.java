@@ -22,7 +22,10 @@ public class SearchBot extends BasicBot {
 
     private String mLang;
 
-    private final static int MAX_LENGTH = 1000;
+    private String pageText;
+    private int mLastIdx = 0;
+
+    private final static int MAX_LENGTH = 500;
 
     private static final Pattern UNWANTED_SYMBOLS =
             Pattern.compile("(?:--|[\\[\\]{}()+/\\\\])");
@@ -57,6 +60,17 @@ public class SearchBot extends BasicBot {
     @Override
     public ArrayList<String> getWhatBotThinks(String searchTerm) {
 
+        if ((searchTerm.equalsIgnoreCase("more")||searchTerm.equalsIgnoreCase("+")) && pageText != null)
+        {
+            mLastIdx += MAX_LENGTH;
+
+            if (mLastIdx < pageText.length()) {
+                int end = mLastIdx + MAX_LENGTH;
+                ArrayList<String> resp = new ArrayList<>();
+                resp.add(pageText.substring(mLastIdx, Math.min(end,pageText.length()-1)));
+                return resp;
+            }
+        }
 
         if (Character.UnicodeBlock.of(searchTerm.charAt(0))==Character.UnicodeBlock.TIBETAN)
         {
@@ -78,7 +92,7 @@ public class SearchBot extends BasicBot {
 
         Article article = wikiBot.getArticle(searchTerm);
 
-        String pageText = article.getText();
+        pageText = article.getText();
 
         if (article.isRedirect() || pageText.startsWith("#REDIRECT"))
         {
@@ -97,11 +111,11 @@ public class SearchBot extends BasicBot {
             article = wikiBot.getArticle(searchTerm);
             pageText = article.getText();
 
-            if (article.getSimpleArticle().isRedirect())
+            if (article.isRedirect() || pageText.startsWith("#REDIRECT"))
             {
                 if (pageText.length() > 12) {
                     pageText = pageText.substring(12);
-                    pageText = pageText.substring(0, pageText.length() - 2);
+                    pageText = pageText.substring(0, pageText.indexOf("]"));
                     article = wikiBot.getArticle(pageText);
                     pageText = article.getText();
                 }
@@ -111,14 +125,15 @@ public class SearchBot extends BasicBot {
 
         try {
 
-            String plainStr = wikiModel.render(new PlainTextConverter(), pageText);
+            pageText = wikiModel.render(new PlainTextConverter(), pageText);
 
-            if (plainStr != null && plainStr.length() > 0) {
-                plainStr = plainStr.replaceAll("(\\w+):([^\\n]+)", " ").replace("\n", " ").trim();
-                if (plainStr.length() > MAX_LENGTH)
-                    plainStr = plainStr.substring(0, MAX_LENGTH) + "...";
+            if (pageText != null && pageText.length() > 0) {
+                pageText = pageText.replaceAll("(\\w+):([^\\n]+)", " ").replace("\n", " ").trim();
 
-                resp.add(plainStr);
+                if (pageText.length() > MAX_LENGTH)
+                    resp.add(pageText.substring(0, MAX_LENGTH) + "...");
+                else
+                    resp.add(pageText);
             }
             else
             {
