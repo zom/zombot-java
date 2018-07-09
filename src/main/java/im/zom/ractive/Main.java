@@ -111,6 +111,8 @@ public class Main implements Runnable {
 
         builder.setDebuggerEnabled(true);
 
+        builder.setConnectTimeout(60000);
+
         builder.setServiceName((DomainBareJid) jid);
 
 
@@ -166,6 +168,23 @@ public class Main implements Runnable {
                 @Override
                 public void presenceSubscribed(BareJid bareJid, Presence presence) {
                     buildSession(bareJid.asEntityBareJidIfPossible());
+                    try {
+                        sendMessage(bareJid, ":)");
+                    } catch (XMPPException e) {
+                        e.printStackTrace();
+                    } catch (SmackException.NotConnectedException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (UndecidedOmemoIdentityException e) {
+                        e.printStackTrace();
+                    } catch (CryptoFailedException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (SmackException.NoResponseException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -228,6 +247,10 @@ public class Main implements Runnable {
                 }
             });
 
+            //list to store listening contacts
+            buddyList = new HashMap<>();
+
+            new Thread(this).start();
 
         } catch (XMPPException e) {
             e.printStackTrace();
@@ -238,10 +261,6 @@ public class Main implements Runnable {
             e.printStackTrace();
         }
 
-        //list to store listening contacts
-        buddyList = new HashMap<>();
-
-        new Thread(this).start();
 
     }
 
@@ -266,7 +285,6 @@ public class Main implements Runnable {
         while (true) {
             try {
                 Thread.sleep(3000);
-
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -303,13 +321,14 @@ public class Main implements Runnable {
             chatList.put(source, chat);
 
             try {
-                Presence presenced = new Presence(Presence.Type.subscribed);
-                presenced.setTo(source);
-                mConnection.sendStanza(presenced);
 
                 Presence presence = new Presence(Presence.Type.subscribe);
                 presence.setTo(source);
                 mConnection.sendStanza(presence);
+
+                Presence presenced = new Presence(Presence.Type.subscribed);
+                presenced.setTo(source);
+                mConnection.sendStanza(presenced);
 
                 String welcome = bot.getWelcomeMessage();
                 if (welcome != null)
