@@ -87,6 +87,12 @@ public class SearchBot extends BasicBot {
                 changeLanguage("zh");
             }
         }
+        else {
+            if (!mLang.equalsIgnoreCase("en"))
+            {
+                changeLanguage("en");
+            }
+        }
 
         ArrayList<String> resp = new ArrayList<>();
 
